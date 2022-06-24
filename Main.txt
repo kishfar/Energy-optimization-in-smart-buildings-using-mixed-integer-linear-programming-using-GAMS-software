@@ -1,0 +1,264 @@
+sets
+i device  /1*20/
+j day     /1*365/
+t time(h) /1*24/
+;
+********************************************************************************
+********************************************************************************
+parameters
+CoPV    OM cost of PhotoVoltaic    /0.005/
+CoST    OM cost of Solar Thermal   /0.005/
+CoWT    OM cost of Wind Turbine    /0.005/
+CoFC    OM cost of FC              /1.54/
+CoGSHP  OM cost of Ground Source Heat Pump  /0.01/
+CoEES   OM cost of Electerical Energy Storage  /0.005/
+CoTES   OM cost of Thermal Energy Storage      /0.001/
+CBE     Price for buying electricity imported from the grid   /0.003/
+CSE     Price for selling electricity exported to the grid at /0.03/
+Pco2(t)    CO2 intensity of the grid electricity
+EPVmin     Minimum power output PV    /0/
+EPVmax     Maximum power output PV    /12/
+ESTmin     Minimum power output ST    /0/
+ESTmax     Maximum power output ST    /2.2/
+EWTmin     Minimum power output WT    /0/
+EWTmax     Maximum power output WT    /7/
+EFCmin     Minimum power output FC    /0/
+EFCmax     Maximum power output FC    /1/
+LEESmin    Minimum energy stored in the EES    /3.6/
+LEESmax    Maximum energy stored in the EES    /12/
+LTESmin    Minimum energy stored in the TES    /2.5/
+LTESmax    Maximum energy stored in the TES    /10/
+LEES0      Energy levels stored in EES at the end of a 24-hour period     /6/
+LTES0      Energy levels stored in TES at the end of a 24-hour period     /6/
+EEESchmin  Minimum EES charge     /0.4/
+EEESchmax  Maximum EES charge     /12/
+EEESdchmin Minimum EES discharge  /0.4/
+EEESdchmax Maximum EES discharge  /12/
+ETESchmin  Minimum TES charge     /0/
+ETESchmax  Maximum TES charge     /10/
+ETESdchmin Minimum TES discharge  /0/
+ETESdchmax Maximum TES discharge  /10/
+Eimpmax    Maximum allowed electricity imported from the grid to the building  /20/
+Eexpmax    Maximum allowed electricity exported from the grid to the building  /10/
+nWT        Production coefcient Wind Turbine  /0.26/
+nFC        Efciency FC       /0.65/
+nPV        Efciency PV       /0.15/
+nST        Efciency ST       /0.15/
+nEESch     Charge efciency electrical energy storage    /0.95/
+nTESch     Charge efciency thermal energy storage       /0.75/
+nEESdch    Discharge efciency electrical energy storage /0.95/
+nTESdch    Discharge efciency thermal energy storage    /0.75/
+SEES       Self-discharge energy loss of EES            /0.02/
+STES       Self-discharge energy loss of TES            /0.032/
+SPV        Installed photovoltaic area       /70/
+SST        Installed Solar Thermal area      /12/
+SWT        Rotor Cover Area                  /28/
+Vcutin     Cut in wind speed                 /3/
+Vcutout    Cut out wind speed                /10/
+Ad         Air density                       /1.225/
+Am         Air mass                          /352.8/
+cv         Constant volume of air            /0.718/
+Tcmf       Comfortable temperature           /25/
+solar(t,j)
+wind(t,j)
+temp(t,j)
+GSHP(t,j)   GSHP power consumption
+;
+$call gdxxrw solar.xlsx par=solar rng=sheet1!a1 Cdim=1 Rdim=1
+$gdxin solar.gdx
+$load solar
+$gdxin
+$call gdxxrw wind.xlsx par=wind rng=sheet1!a1   Cdim=1 Rdim=1
+$gdxin wind.gdx
+$load wind
+$gdxin
+$call gdxxrw temp.xlsx par=temp rng=sheet1!a1   Cdim=1 Rdim=1
+$gdxin temp.gdx
+$load temp
+$gdxin
+$call gdxxrw GSHP.xlsx par=GSHP rng=sheet1!a1 Cdim=1 Rdim=1
+$gdxin GSHP.gdx
+$load GSHP
+$gdxin
+;
+********************************************************************************
+********************************************************************************
+Table SmartTable(i,*)
+      consumptionhour       start     end         energyconsumption
+1           24               0         24               0.15
+2           24               0         24               0.01
+3           24               0         24               0.01
+4           24               0         24               0.01
+5           6                9         22               1
+6           8                7         23               1.4
+7           4                11        20               1.8
+8           7                15        24               0.14
+9           9                6         18               0.12
+10          9                1         12               1.16
+11          16               7         24               0.3
+12          12               7         24               1.5
+13          12               10        24               0.1
+14          6                16        24               0.3
+15          3                10        17               1.1
+16          10               8         21               0.65
+17          6                8         24               0.9
+18          12               6         23               1
+19          6                10        22               0.6
+20          4                7         12               0.8
+;
+********************************************************************************
+********************************************************************************
+Binary variables
+SEESch(t,j)  Charging status EES
+SEESdch(t,j) Discharging status EES
+STESch(t,j)  Charging status TES
+STESdch(t,j) Discharging status TES
+GSHPM(t,j)   GSHP status
+FCM(t,j)     Fuel cell status
+M(i,t,j)     Device mode
+ESimp(t,j)   Status of electricity Purchase from the grid
+ESexp(t,j)   Status of electricity sales to the grid
+*HM(t,j)      Heating mode
+*CM(t,j)      Cooling mode
+;
+********************************************************************************
+********************************************************************************
+positive Variables
+Pfc(t,j)     Hydrogen power input to the Fuel Cell
+EgPV(t,j)    Energy generated by PV
+EgST(t,j)    Energy generated by ST
+EgWT(t,j)    Energy generated by WT
+EgFC(t,j)    Energy generated by FC
+Eimp(t,j)    Energy imported from the grid
+Eexp(t,j)    Energy exported from the grid
+EEESdch(t,j) Discharge of electrical energy storage system
+ETESdch(t,j) Discharge of Thermal energy storage system
+EEESch(t,j)  charge of electrical energy storage system
+ETESch(t,j)  charge of Thermal energy storage system
+LEES(t,j)    The level of energy stored in the EES
+LTES(t,j)    The level of energy stored in the TES
+Esh(t,j)     Smart home power consumption
+TE(t,j)      Total power consumption of smart devices
+ECD(i,t,j)   Energy consumption of device i
+;
+variable
+OF         Objective function
+;
+********************************************************************************
+********************************************************************************
+Equations
+G
+c1
+c2
+c3
+c4
+c5
+c6
+c7
+c8
+c9
+c10
+c11
+*c12
+*c13
+*c13a
+c14
+c15
+c16
+c16a
+c17
+c18
+c19
+c20
+c21
+c22
+c23
+*c23a
+c25
+c26
+c27
+c28
+c29
+c30
+c31
+c32
+c33
+*c35
+*c36
+c37
+*c38
+c39
+c40
+c40a
+c40b
+c40c
+c41
+c42
+c43
+c44
+c45
+c46
+c47
+*c48
+;
+G..OF=e=sum((t,j),Copv*EgPV(t,j))+sum((t,j),CoST*EgST(t,j))+
+        sum((t,j),CoWT*EgWT(t,j))+sum((t,j),CoFC*EgFC(t,j))+
+        sum((t,j),CBE*Eimp(t,j))-sum((t,j),CSE*Eexp(t,j))+
+        sum((t,j),CoEES*EEESdch(t,j))+sum((t,j),CoTES*ETESdch(t,j))+
+        sum((t,j),CoGSHP*GSHP(t,j))
+;
+c1(t,j).. EgPV(t,j)=e=nPV*SPV*solar(t,j);
+c2(t,j).. EgST(t,j)=e=nST*SST*solar(t,j);
+c3(t,j).. EgPV(t,j)=l=EPVmax;
+c4(t,j).. EgPV(t,j)=g=EPVmin;
+c5(t,j).. EgST(t,j)=l=ESTmax;
+c6(t,j).. EgST(t,j)=g=ESTmin;
+c7(t,j).. EgWT(t,j)=l=EWTmax;
+c8(t,j).. EgWT(t,j)=g=EWTmin;
+c9(t,j).. EgFC(t,j)=l=EFCmax;
+c10(t,j).. EgFC(t,j)=g=EFCmin;
+c11(t,j).. EgWT(t,j)=e=((1/2000)*Ad*nWT*SWT*(wind(t,j))**3);
+c14(t,j).. Esh(t,j)=l=EgPV(t,j)+EgWT(t,j)+Eimp(t,j)+EgFC(t,j);
+c15(t,j).. EgFC(t,j)=l=Esh(t,j);
+c16(t,j)$(ord(t)>1).. LEES(t,j)=e=LEES(t-1,j)+(nEESch*EEESch(t,j)-nEESdch*EEESdch(t,j)-SEES) ;
+c16a(t,j)$(ord(t)<2).. LEES(t,j)=e=(nEESch*EEESch(t,j)-nEESdch*EEESdch(t,j)-SEES) ;
+c17(t,j).. EEESch(t,j)=g=SEESch(t,j)*EEESchmin  ;
+c18(t,j).. EEESch(t,j)=l=SEESch(t,j)*EEESchmax  ;
+c19(t,j).. EEESdch(t,j)=g=SEESdch(t,j)*EEESdchmin  ;
+c20(t,j).. EEESdch(t,j)=l=SEESdch(t,j)*EEESdchmax  ;
+c21(t,j).. LEES(t,j)=l=LEESmax  ;
+c22(t,j).. LEES(t,j)=g=LEESmin   ;
+c23(t,j).. SEESch(t,j)+SEESdch(t,j)=l=1  ;
+c25(t,j)$(ord(t)<2).. LTES(t,j)=e=(nTESch*ETESch(t,j)-nTESdch*ETESdch(t,j)-STES)  ;
+c26(t,j)$(ord(t)>1).. LTES(t,j)=e=(nTESch*ETESch(t,j)-nTESdch*ETESdch(t,j)-STES)+LTES(t-1,j)   ;
+c27(t,j).. STESch(t,j)*ETESchmin=l=ETESch(t,j)   ;
+c28(t,j).. ETESch(t,j)=l=STESch(t,j)*ETESchmax    ;
+c29(t,j).. STESdch(t,j)*ETESdchmin=l=ETESdch(t,j)   ;
+c30(t,j).. ETESdch(t,j)=l=STESdch(t,j)*ETESdchmax  ;
+c31(t,j).. LTES(t,j)=g=LTESmin    ;
+c32(t,j).. LTES(t,j)=l=LTESmax   ;
+c33(t,j).. STESch(t,j)+STESdch(t,j)=l=1   ;
+c37(t,j).. Esh(t,j)-TE(t,j)-GSHP(t,j)=e=0     ;
+c39(t,j).. TE(t,j)=l=Esh(t,j)  ;
+c40(i,t,j)$(ord(i)>4)..ECD(i,t,j)=e=SmartTable(i,'energyconsumption')*M(i,t,j)  ;
+c40c(i,t,j)$(ord(i)<5)..     ECD(i,t,j)=e=SmartTable(i,'energyconsumption')  ;
+c40a(i,j)$(ord(i)>4)..sum(    t$(ord(t)<=SmartTable(i,'end') and ord(t)>=SmartTable(i,'start')),ECD(i,t,j))=e=SmartTable(i,'energyconsumption')*SmartTable(i,'consumptionhour') ;
+c40b(t,j).. TE(t,j)=e=sum(i,ECD(i,t,j));
+c41(t,j).. TE(t,j)-Eimp(t,j)-EgPV(t,j)-EgWT(t,j)-EgFC(t,j)-EEESdch(t,j)+GSHP(t,j)+EEESch(t,j)+Eexp(t,j)=l=0  ;
+c42(t,j).. Eimp(t,j)=g=0     ;
+c43(t,j).. Eimp(t,j)=l=ESimp(t,j)*Eimpmax   ;
+c44(t,j).. Eexp(t,j)=g=0   ;
+c45(t,j).. Eexp(t,j)=l=ESexp(t,j)*Eexpmax  ;
+c46(t,j).. ESimp(t,j)+ESexp(t,j)=l=1   ;
+c47(t,j).. Eexp(t,j)=l=EgPV(t,j)+EgWT(t,j)+EgFC(t,j)   ;
+*c48(t,j).. GSHP(t,j)=l=Am*cv*0.8*(Tcmf-temp(t,j))/3600  ;
+* costraint of using device at time t
+
+display  solar ;
+display wind  ;
+display temp;
+Model opt /all/;
+Solve opt us MIP min OF;
+execute_unload "results8883.gdx" ;
+*execute_unload "results442.gdx" EgPV.L ;
+*execute 'gdxxrw.exe results442.gdx o=results442.xls var=EgPV.L'
